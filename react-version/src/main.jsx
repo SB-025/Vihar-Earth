@@ -24,8 +24,19 @@ function readRoute() {
 const asset = (name) => `${import.meta.env.BASE_URL}assets/${name}`;
 const href = (page, service) =>
   `#/${page}${service ? "?service=" + encodeURIComponent(service) : ""}`;
-function Arrow() {
-  return <span aria-hidden="true">↗</span>;
+function Arrow({ direction = "diagonal" }) {
+  const paths = {
+    diagonal: "M6 18 18 6M6 6h12v12",
+    right: "M4 12h16M13 5l7 7-7 7",
+    down: "M12 4v16M5 13l7 7 7-7",
+  };
+  return (
+    <svg className="arrow-icon" width="20" height="20" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" strokeWidth="1.6"
+      strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+      <path d={paths[direction] || paths.diagonal} />
+    </svg>
+  );
 }
 function LinkButton({ children, to = "contact", light = false }) {
   return (
@@ -285,7 +296,7 @@ function Home({ paused }) {
               Find your possibilities
             </LinkButton>
             <a className="text-link" href="#/about">
-              Our story <span>→</span>
+              Our story <Arrow direction="right" />
             </a>
           </div>
         </div>
@@ -322,7 +333,7 @@ function Home({ paused }) {
                 ?.scrollIntoView({ behavior: paused ? "instant" : "smooth" });
             }}
           >
-            SCROLL TO EXPLORE <span>↓</span>
+            SCROLL TO EXPLORE <Arrow direction="down" />
           </a>
         </div>
       </section>
@@ -405,7 +416,7 @@ function Home({ paused }) {
                     <div className="land-caption">
                       <span className="eyebrow">{s.tag}</span>
                       <h3>{s.name}</h3>
-                      <span className="circle-arrow">↗</span>
+                      <span className="circle-arrow"><Arrow /></span>
                     </div>
                   </a>
                 </Tilt>

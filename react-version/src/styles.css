@@ -339,9 +339,15 @@ nav a[aria-current]:after {
     background 0.3s,
     box-shadow 0.3s;
 }
-.button > span {
-  font-size: 20px;
-  line-height: 1;
+.arrow-icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  vertical-align: middle;
+}
+.text-link, .talk-link {
+  align-items: center;
 }
 .button:hover {
   transform: translateY(-4px);
@@ -416,8 +422,9 @@ nav a[aria-current]:after {
   gap: 25px;
   align-items: center;
 }
-.scroll-down span {
-  font-size: 24px;
+.scroll-down .arrow-icon {
+  width: 22px;
+  height: 22px;
 }
 .belief-strip {
   display: flex;
@@ -507,8 +514,9 @@ nav a[aria-current]:after {
 .underlined:hover {
   color: var(--gold);
 }
-.underlined > span {
-  font-size: 19px;
+.underlined > .arrow-icon {
+  width: 19px;
+  height: 19px;
 }
 .collection {
   background: #eae6da;
