@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect, useRef, useState } from "react";
+import React, { Suspense, lazy, useEffect, useId, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   AnimatePresence,
@@ -94,11 +94,26 @@ function Tilt({ children, className = "" }) {
   );
 }
 function Brand() {
+  const emblemFilter = `emblem-${useId().replace(/:/g, "")}`;
   return (
     <a className="brand" href="#/home" aria-label="Vihar Earth home">
-      <span className="brand-symbol">
-        <img src={asset("logo.jpeg")} alt="" />
-      </span>
+      <svg className="brand-symbol" viewBox="530 130 350 350"
+        width="48" height="48" aria-hidden="true" focusable="false">
+        <defs>
+          <filter id={emblemFilter} x="530" y="130" width="350" height="350"
+            filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+            {/* Extract the original ink while making the photographed paper transparent. */}
+            <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -0.2126 -0.7152 -0.0722 0 1" />
+            <feComponentTransfer result="ink">
+              <feFuncA type="linear" slope="3" intercept="-0.5" />
+            </feComponentTransfer>
+            <feFlood floodColor="#896a40" />
+            <feComposite in2="ink" operator="in" />
+          </filter>
+        </defs>
+        <image href={asset("logo.jpeg")} x="0" y="0" width="1408" height="768"
+          filter={`url(#${emblemFilter})`} />
+      </svg>
       <span>
         VIHAR EARTH<small>LAND & ESTATES</small>
       </span>

@@ -210,19 +210,13 @@ header {
   margin-top: 7px;
 }
 .brand-symbol {
-  height: 47px;
-  width: 41px;
+  display: block;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
   overflow: hidden;
-  position: relative;
-  mix-blend-mode: multiply;
 }
-.brand-symbol img {
-  position: absolute;
-  width: 182px;
-  max-width: none;
-  left: -70px;
-  top: -18px;
-}
+
 nav {
   display: flex;
   gap: 28px;
@@ -1108,9 +1102,9 @@ textarea {
     letter-spacing: 2.7px;
   }
   .brand-symbol {
-    transform: scale(0.85);
-    width: 36px;
-    transform-origin: left center;
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
   }
   .header-actions {
     gap: 8px;
