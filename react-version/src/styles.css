@@ -1456,3 +1456,7 @@ html[data-motion="off"] .tilt {
 .enquiry-trap { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 .form-status:empty { display: none; }
 form button:disabled { opacity: .65; cursor: wait; }
+
+@media (max-width: 760px) {
+  .contact-grid > .contact-invitation { order: -1; }
+}

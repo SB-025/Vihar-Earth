@@ -814,7 +814,7 @@ function EnquiryForm({ service }) {
         by Vihar Earth about this enquiry.
       </label>
       <button className="button" type="submit" disabled={busy}>
-        {busy ? "Sending your enquiry?" : "Send enquiry"}
+        {busy ? "Sending your enquiry..." : "Send enquiry"}
         <Arrow />
       </button>
       <p
@@ -870,9 +870,9 @@ function Contact({ params }) {
             </a>
           </div>
         </Reveal>
-        <Reveal className="contact-invitation">
+        <div className="contact-invitation">
           <EnquiryForm key={service || "general"} service={service} />
-        </Reveal>
+        </div>
       </section>
       <section className="container faq">
         <span className="eyebrow">BEFORE WE BEGIN</span>
