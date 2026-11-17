@@ -1,4 +1,11 @@
-import React, { Suspense, lazy, useEffect, useId, useRef, useState } from "react";
+import React, {
+  Suspense,
+  lazy,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from "react";
 import { createRoot } from "react-dom/client";
 import {
   AnimatePresence,
@@ -31,9 +38,19 @@ function Arrow({ direction = "diagonal" }) {
     down: "M12 4v16M5 13l7 7 7-7",
   };
   return (
-    <svg className="arrow-icon" width="20" height="20" viewBox="0 0 24 24"
-      fill="none" stroke="currentColor" strokeWidth="1.6"
-      strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+    <svg
+      className="arrow-icon"
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
       <path d={paths[direction] || paths.diagonal} />
     </svg>
   );
@@ -97,13 +114,29 @@ function Brand() {
   const emblemFilter = `emblem-${useId().replace(/:/g, "")}`;
   return (
     <a className="brand" href="#/home" aria-label="Vihar Earth home">
-      <svg className="brand-symbol" viewBox="530 130 350 350"
-        width="48" height="48" aria-hidden="true" focusable="false">
+      <svg
+        className="brand-symbol"
+        viewBox="530 130 350 350"
+        width="48"
+        height="48"
+        aria-hidden="true"
+        focusable="false"
+      >
         <defs>
-          <filter id={emblemFilter} x="530" y="130" width="350" height="350"
-            filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+          <filter
+            id={emblemFilter}
+            x="530"
+            y="130"
+            width="350"
+            height="350"
+            filterUnits="userSpaceOnUse"
+            colorInterpolationFilters="sRGB"
+          >
             {/* Extract the original ink while making the photographed paper transparent. */}
-            <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -0.2126 -0.7152 -0.0722 0 1" />
+            <feColorMatrix
+              type="matrix"
+              values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -0.2126 -0.7152 -0.0722 0 1"
+            />
             <feComponentTransfer result="ink">
               <feFuncA type="linear" slope="3" intercept="-0.5" />
             </feComponentTransfer>
@@ -111,8 +144,14 @@ function Brand() {
             <feComposite in2="ink" operator="in" />
           </filter>
         </defs>
-        <image href={asset("logo.jpeg")} x="0" y="0" width="1408" height="768"
-          filter={`url(#${emblemFilter})`} />
+        <image
+          href={asset("logo.jpeg")}
+          x="0"
+          y="0"
+          width="1408"
+          height="768"
+          filter={`url(#${emblemFilter})`}
+        />
       </svg>
       <span>
         VIHAR EARTH<small>LAND & ESTATES</small>
@@ -424,14 +463,20 @@ function Home({ paused }) {
                   <a href={`#/lands?type=${s.category}`}>
                     <img
                       src={asset(`${s.image}.jpg`)}
-                      alt={`Illustrative ${s.name.toLowerCase()} landscape`}
+                      alt={
+                        s.imageAlt ||
+                        `Illustrative ${s.name.toLowerCase()} landscape`
+                      }
+                      style={{ objectPosition: s.imagePosition || "center" }}
                       loading="lazy"
                     />
                     <span className="visual-number">0{i + 1}</span>
                     <div className="land-caption">
                       <span className="eyebrow">{s.tag}</span>
                       <h3>{s.name}</h3>
-                      <span className="circle-arrow"><Arrow /></span>
+                      <span className="circle-arrow">
+                        <Arrow />
+                      </span>
                     </div>
                   </a>
                 </Tilt>
@@ -636,7 +681,11 @@ function Lands({ params }) {
                   <div className="explore-image">
                     <img
                       src={asset(`${s.image}.jpg`)}
-                      alt={`Illustrative ${s.name.toLowerCase()} landscape`}
+                      alt={
+                        s.imageAlt ||
+                        `Illustrative ${s.name.toLowerCase()} landscape`
+                      }
+                      style={{ objectPosition: s.imagePosition || "center" }}
                     />
                     <span>LAND POSSIBILITIES</span>
                   </div>
@@ -664,7 +713,7 @@ function Lands({ params }) {
 }
 function Contact({ params }) {
   const requested = params.get("service");
-  const service = services.some(s => s.name === requested) ? requested : null;
+  const service = services.some((s) => s.name === requested) ? requested : null;
   return (
     <>
       <PageIntro
@@ -703,11 +752,29 @@ function Contact({ params }) {
         </Reveal>
         <Reveal className="contact-invitation">
           <span className="eyebrow">LET?S MAKE IT PERSONAL</span>
-          <h2>Your vision.<br /><em>Our next conversation.</em></h2>
-          <p>{service ? `Interested in ${service.toLowerCase()}? Talk to us about your preferred location, budget and plans.` : "A future home, a farm, or a place closer to nature. Tell us what you have in mind, and let?s explore the possibilities."}</p>
-          <a className="button" href="tel:+919970567798">Call Sunil Bhansari <Arrow /></a>
-          <a className="underlined" href="mailto:bhansaris@gmail.com">Email us directly <Arrow /></a>
-          <div className="visit-note"><span className="eyebrow">PLANNING A SITE VISIT?</span><p>Call us to discuss suitable locations and arrange a time to walk the land together.</p></div>
+          <h2>
+            Your vision.
+            <br />
+            <em>Our next conversation.</em>
+          </h2>
+          <p>
+            {service
+              ? `Interested in ${service.toLowerCase()}? Talk to us about your preferred location, budget and plans.`
+              : "A future home, a farm, or a place closer to nature. Tell us what you have in mind, and let?s explore the possibilities."}
+          </p>
+          <a className="button" href="tel:+919970567798">
+            Call Sunil Bhansari <Arrow />
+          </a>
+          <a className="underlined" href="mailto:bhansaris@gmail.com">
+            Email us directly <Arrow />
+          </a>
+          <div className="visit-note">
+            <span className="eyebrow">PLANNING A SITE VISIT?</span>
+            <p>
+              Call us to discuss suitable locations and arrange a time to walk
+              the land together.
+            </p>
+          </div>
         </Reveal>
       </section>
       <section className="container faq">

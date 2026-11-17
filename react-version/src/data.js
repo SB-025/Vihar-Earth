@@ -13,6 +13,8 @@ export const services = [
     icon: "♧",
     text: "Explore forest-linked land with attention to classification, access and applicable restrictions.",
     image: "forest",
+    imageAlt: "Dense forest in Matheran, Maharashtra, India",
+    imagePosition: "50% 50%",
     category: "open",
   },
   {
@@ -20,7 +22,9 @@ export const services = [
     tag: "A place to belong",
     icon: "⌂",
     text: "Find land for your residential plans, with guidance on non-agricultural status, access and supporting records.",
-    image: "fields",
+    image: "residential",
+    imageAlt: "Homes and greenery in Chadayamangalam, Kerala, India",
+    imagePosition: "50% 55%",
     category: "residential",
   },
   {
@@ -37,6 +41,9 @@ export const services = [
     icon: "≈",
     text: "Explore coastal land with attention to connectivity, location and site-specific development constraints.",
     image: "coast",
+    imageAlt:
+      "White-sand beach with tropical trees in the Andaman Islands, India",
+    imagePosition: "50% 65%",
     category: "coastal",
   },
   {
@@ -44,7 +51,9 @@ export const services = [
     tag: "Rooted in possibility",
     icon: "❋",
     text: "Discover orchard opportunities and discuss plantation condition, water access and ongoing care.",
-    image: "forest",
+    image: "mango",
+    imageAlt: "Mango fruit growing on a real mango tree in India",
+    imagePosition: "50% 50%",
     category: "farms",
   },
   {
@@ -52,7 +61,9 @@ export const services = [
     tag: "Room to grow",
     icon: "✳",
     text: "Explore cashew-growing land and estates, with on-site attention to terrain, access and plantation condition.",
-    image: "fields",
+    image: "cashew",
+    imageAlt: "Cashew apple and nut growing on a tree branch in India",
+    imagePosition: "50% 68%",
     category: "farms",
   },
   {
@@ -60,7 +71,9 @@ export const services = [
     tag: "An open beginning",
     icon: "▱",
     text: "Consider undeveloped parcels in relation to your plans, access, terrain and available infrastructure.",
-    image: "fields",
+    image: "barren",
+    imageAlt: "Dry undeveloped ground in Bengaluru, Karnataka, India",
+    imagePosition: "50% 60%",
     category: "open",
   },
 ];
