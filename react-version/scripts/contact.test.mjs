@@ -19,8 +19,8 @@ const enquiry = {
   submissionId: "12345678-1234-1234-1234-123456789abc",
 };
 const env = {
-  RESEND_API_KEY: "test-only-key",
-  RESEND_FROM_EMAIL: "hello@example.com",
+  SMTP_PASS: "test-only-password",
+  SMTP_USER: "hello@example.com",
   SITE_URL: "https://example.com",
 };
 async function invoke(handler, data = enquiry, options = {}) {
@@ -30,6 +30,7 @@ async function invoke(handler, data = enquiry, options = {}) {
     "content-type": "application/json",
     origin: options.origin || "https://example.com",
   };
+  if (options.parsed) req.body = data;
   req.socket = { remoteAddress: "127.0.0.1" };
   let status, body;
   await handler(req, {
@@ -54,47 +55,55 @@ test("validates input and safely renders the acknowledgement", () => {
   assert.equal(emails.length, 2);
   assert.deepEqual(emails[0].to, ["owner@example.com"]);
   assert.deepEqual(emails[1].to, ["visitor@example.com"]);
-  assert.equal(emails[0].reply_to, "visitor@example.com");
-  assert.equal(emails[1].reply_to, "owner@example.com");
+  assert.equal(emails[0].replyTo, "visitor@example.com");
+  assert.equal(emails[1].replyTo, "owner@example.com");
   assert.match(emails[1].html, /Test &lt;Visitor&gt;/);
   assert.doesNotMatch(emails[1].html, /<Visitor>/);
   assert.match(emails[1].text, /Thank you for reaching out/);
 });
-test("sends both emails in a single batch and keeps retry idempotency stable", async () => {
+test("sends enquiry then thank-you with SMTP and supports Vercel parsed bodies", async () => {
   const calls = [];
+  let settings;
   const handler = createContactHandler({
     env,
-    fetchImpl: async (url, options) => {
-      calls.push({ url, options });
+    createTransport: (options) => {
+      settings = options;
       return {
-        ok: true,
-        json: async () => ({ data: [{ id: "owner" }, { id: "thanks" }] }),
+        sendMail: async (email) => {
+          calls.push(email);
+          return { accepted: email.to };
+        },
+        close() {},
       };
     },
   });
   assert.equal((await invoke(handler)).status, 200);
-  assert.equal((await invoke(handler)).status, 200);
-  assert.equal(calls[0].url, "https://api.resend.com/emails/batch");
-  assert.equal(JSON.parse(calls[0].options.body).length, 2);
-  assert.equal(
-    calls[0].options.headers["Idempotency-Key"],
-    calls[1].options.headers["Idempotency-Key"],
-  );
+  assert.equal((await invoke(handler, enquiry, { parsed: true })).status, 200);
+  assert.equal(calls.length, 4);
+  assert.equal(settings.host, "smtp.gmail.com");
+  assert.equal(settings.secure, true);
+  assert.equal(settings.auth.pass, env.SMTP_PASS);
+  assert.deepEqual(calls[0].to, ["bhansaris@gmail.com"]);
+  assert.deepEqual(calls[1].to, [enquiry.email]);
 });
-test("missing settings, invalid inputs and cross-origin requests never send mail", async () => {
+test("missing credentials, invalid input and wrong origin never send mail", async () => {
   let calls = 0;
-  const fetchImpl = async () => {
+  const createTransport = () => {
     calls++;
+    throw new Error("unexpected");
   };
   assert.equal(
     (
       await invoke(
-        createContactHandler({ env: { SITE_URL: env.SITE_URL }, fetchImpl }),
+        createContactHandler({
+          env: { SITE_URL: env.SITE_URL },
+          createTransport,
+        }),
       )
     ).status,
     503,
   );
-  const handler = createContactHandler({ env, fetchImpl });
+  const handler = createContactHandler({ env, createTransport });
   assert.equal(
     (await invoke(handler, enquiry, { origin: "https://other.example" }))
       .status,
@@ -104,30 +113,61 @@ test("missing settings, invalid inputs and cross-origin requests never send mail
     (await invoke(handler, { ...enquiry, consent: false })).status,
     400,
   );
+  assert.equal(
+    (await invoke(handler, { ...enquiry, website: "bot" })).status,
+    400,
+  );
   assert.equal((await invoke(handler, enquiry, { method: "GET" })).status, 405);
+  assert.equal(
+    (
+      await invoke(
+        handler,
+        { ...enquiry, message: "a".repeat(17000) },
+        { parsed: true },
+      )
+    ).status,
+    413,
+  );
   assert.equal(calls, 0);
 });
-test("provider failure and partial responses never claim success", async () => {
-  for (const result of [
-    { ok: false, json: async () => ({ message: "denied" }) },
-    { ok: true, json: async () => ({ data: [{ id: "one" }] }) },
-  ]) {
-    assert.equal(
-      (
-        await invoke(
-          createContactHandler({ env, fetchImpl: async () => result }),
-        )
-      ).status,
-      502,
-    );
-  }
+test("SMTP rejection does not claim enquiry success or send acknowledgement", async () => {
+  let calls = 0;
+  const handler = createContactHandler({
+    env,
+    createTransport: () => ({
+      sendMail: async () => {
+        calls++;
+        return { accepted: [] };
+      },
+      close() {},
+    }),
+  });
+  assert.equal((await invoke(handler)).status, 502);
+  assert.equal(calls, 1);
+});
+test("thank-you failure preserves submitted enquiry and reports partial outcome", async () => {
+  let calls = 0;
+  const handler = createContactHandler({
+    env,
+    createTransport: () => ({
+      sendMail: async () => {
+        if (++calls === 2) throw new Error("SMTP unavailable");
+        return { accepted: ["owner@example.com"] };
+      },
+      close() {},
+    }),
+  });
+  const response = await invoke(handler);
+  assert.equal(response.status, 200);
+  assert.match(response.body.message, /could not send your confirmation/);
+  assert.equal(calls, 2);
 });
 test("limits repeated enquiries to a recipient", async () => {
   const handler = createContactHandler({
     env,
-    fetchImpl: async () => ({
-      ok: true,
-      json: async () => ({ data: [{ id: "a" }, { id: "b" }] }),
+    createTransport: () => ({
+      sendMail: async (email) => ({ accepted: email.to }),
+      close() {},
     }),
   });
   for (let i = 0; i < 5; i++) assert.equal((await invoke(handler)).status, 200);

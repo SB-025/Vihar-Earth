@@ -75,11 +75,46 @@ all.click();
 await wait();
 assert.equal(doc.querySelectorAll(".explore-grid article").length, 6);
 await route("/contact?service=Mango%20farms");
-assert.equal(doc.querySelector('main .contact-logo'), null);
-assert.equal(doc.querySelector('main form'), null);
-assert.match(doc.querySelector('.contact-invitation').textContent, /mango farms/);
-assert.ok(doc.querySelector('.contact-invitation a[href="tel:+919970567798"]'));
-assert.ok(doc.querySelector('.contact-invitation a[href="mailto:bhansaris@gmail.com"]'));
+assert.equal(doc.querySelector("main .contact-logo"), null);
+const form = doc.querySelector("main form");
+assert.ok(form);
+assert.equal(form.querySelector("select").value, "Mango farms");
+assert.ok(doc.querySelector('main a[href="tel:+919970567798"]'));
+assert.ok(doc.querySelector('main a[href="mailto:bhansaris@gmail.com"]'));
+let posted;
+window.fetch = async (url, options) => {
+  posted = { url, body: JSON.parse(options.body) };
+  return {
+    ok: true,
+    json: async () => ({ message: "Your enquiry has been submitted." }),
+  };
+};
+form.elements.name.value = "Test visitor";
+form.elements.email.value = "visitor@example.com";
+form.elements.phone.value = "+919876543210";
+form.elements.message.value = "Please arrange a site visit.";
+form.elements.consent.checked = true;
+form.dispatchEvent(
+  new window.Event("submit", { bubbles: true, cancelable: true }),
+);
+await wait();
+assert.equal(posted.url, "/api/contact");
+assert.equal(posted.body.consent, true);
+assert.equal(posted.body.service, "Mango farms");
+assert.match(form.querySelector('[role="status"]').textContent, /submitted/);
+window.fetch = async () => ({
+  ok: false,
+  json: async () => ({ error: "Email temporarily unavailable" }),
+});
+form.dispatchEvent(
+  new window.Event("submit", { bubbles: true, cancelable: true }),
+);
+await wait();
+assert.match(
+  form.querySelector('[role="status"]').textContent,
+  /temporarily unavailable/,
+);
+assert.equal(form.querySelector("button").disabled, false);
 const toggle = doc.querySelector(".menu-toggle");
 toggle.click();
 await wait();
@@ -92,5 +127,5 @@ assert.equal(toggle.getAttribute("aria-expanded"), "false");
 assert.deepEqual(errors, []);
 dom.window.close();
 console.log(
-  "PASS: five routes, eight services, category filters, frontend-only contact links, service context, logo removed, mobile menu and Escape key.",
+  "PASS: five routes, eight services, category filters, contact form success/error handling, service context, logo removed, mobile menu and Escape key.",
 );

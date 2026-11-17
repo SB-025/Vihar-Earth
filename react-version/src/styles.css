@@ -10,12 +10,31 @@
   --line: #d9d4c5;
   --serif: "Marcellus", Georgia, serif;
 }
-.contact-invitation { padding: 45px; background: #eae5d9; border-top: 2px solid #a68b5f; }
-.contact-invitation .button { margin: 12px 0; }
-.visit-note { margin-top: 36px; padding-top: 26px; border-top: 1px solid var(--line); }
-.visit-note .eyebrow { margin-bottom: 12px; }
-.visit-note p { font-size: 13px; margin: 0; }
-@media (max-width:760px) { .contact-invitation { padding: 28px; } }
+.contact-invitation {
+  padding: 45px;
+  background: #eae5d9;
+  border-top: 2px solid #a68b5f;
+}
+.contact-invitation .button {
+  margin: 12px 0;
+}
+.visit-note {
+  margin-top: 36px;
+  padding-top: 26px;
+  border-top: 1px solid var(--line);
+}
+.visit-note .eyebrow {
+  margin-bottom: 12px;
+}
+.visit-note p {
+  font-size: 13px;
+  margin: 0;
+}
+@media (max-width: 760px) {
+  .contact-invitation {
+    padding: 28px;
+  }
+}
 .hero-terrain {
   position: absolute;
   inset: 0;
@@ -340,7 +359,8 @@ nav a[aria-current]:after {
   flex: 0 0 20px;
   vertical-align: middle;
 }
-.text-link, .talk-link {
+.text-link,
+.talk-link {
   align-items: center;
 }
 .button:hover {
@@ -1429,3 +1449,10 @@ html[data-motion="off"] .tilt {
   background: #f0ddd2;
   color: #713c2d;
 }
+
+/* Avoid iOS input zoom and keep the honeypot out of layout. */
+.contact-invitation form { min-width: 0; padding: 0; border-top: 0; }
+.contact-invitation input, .contact-invitation select, .contact-invitation textarea { font-size: 16px; }
+.enquiry-trap { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.form-status:empty { display: none; }
+form button:disabled { opacity: .65; cursor: wait; }

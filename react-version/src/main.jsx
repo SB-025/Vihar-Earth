@@ -711,6 +711,126 @@ function Lands({ params }) {
     </>
   );
 }
+function EnquiryForm({ service }) {
+  const [status, setStatus] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const sending = useRef(false);
+  async function submit(event) {
+    event.preventDefault();
+    if (sending.current) return;
+    const form = event.currentTarget;
+    const values = Object.fromEntries(new FormData(form));
+    values.consent = values.consent === "on";
+    sending.current = true;
+    setBusy(true);
+    setStatus(null);
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+      const result = await response.json();
+      if (!response.ok)
+        throw new Error(
+          result.error || "Unable to submit. Please call or email us directly.",
+        );
+      setStatus({ message: result.message });
+      form.reset();
+    } catch (error) {
+      setStatus({
+        error: true,
+        message:
+          error instanceof TypeError || error instanceof SyntaxError
+            ? "We could not confirm your submission. Please call or email us directly."
+            : error.message,
+      });
+    } finally {
+      sending.current = false;
+      setBusy(false);
+    }
+  }
+  return (
+    <form onSubmit={submit} aria-label="Land enquiry" aria-busy={busy}>
+      <span className="eyebrow">LET'S MAKE IT PERSONAL</span>
+      <h2>
+        Tell us about <em>your plans.</em>
+      </h2>
+      <div className="form-row">
+        <label>
+          Your name
+          <input name="name" autoComplete="name" maxLength={100} required />
+        </label>
+        <label>
+          Email address
+          <input
+            name="email"
+            type="email"
+            autoComplete="email"
+            maxLength={254}
+            required
+          />
+        </label>
+      </div>
+      <div className="form-row">
+        <label>
+          Phone number
+          <input
+            name="phone"
+            type="tel"
+            autoComplete="tel"
+            minLength={7}
+            maxLength={20}
+            pattern={"[+0-9\\s\\-]{7,20}"}
+            required
+          />
+        </label>
+        <label>
+          I'm interested in
+          <select name="service" defaultValue={service || "General enquiry"}>
+            <option>General enquiry</option>
+            {services.map((s) => (
+              <option key={s.name}>{s.name}</option>
+            ))}
+          </select>
+        </label>
+      </div>
+      <label>
+        Preferred location (optional)
+        <input name="location" maxLength={120} />
+      </label>
+      <label>
+        Your message
+        <textarea name="message" rows={4} maxLength={3000} required />
+      </label>
+      <div className="enquiry-trap" aria-hidden="true">
+        <label>
+          Leave this blank
+          <input name="website" tabIndex={-1} autoComplete="off" />
+        </label>
+      </div>
+      <label className="consent">
+        <input name="consent" type="checkbox" required />I agree to be contacted
+        by Vihar Earth about this enquiry.
+      </label>
+      <button className="button" type="submit" disabled={busy}>
+        {busy ? "Sending your enquiry?" : "Send enquiry"}
+        <Arrow />
+      </button>
+      <p
+        className={status?.error ? "form-error" : "form-status"}
+        role="status"
+        aria-live="polite"
+      >
+        {status?.message}
+      </p>
+      <a className="underlined" href="mailto:bhansaris@gmail.com">
+        Prefer email? Write to us directly <Arrow />
+      </a>
+    </form>
+  );
+}
+
 function Contact({ params }) {
   const requested = params.get("service");
   const service = services.some((s) => s.name === requested) ? requested : null;
@@ -751,30 +871,7 @@ function Contact({ params }) {
           </div>
         </Reveal>
         <Reveal className="contact-invitation">
-          <span className="eyebrow">LET?S MAKE IT PERSONAL</span>
-          <h2>
-            Your vision.
-            <br />
-            <em>Our next conversation.</em>
-          </h2>
-          <p>
-            {service
-              ? `Interested in ${service.toLowerCase()}? Talk to us about your preferred location, budget and plans.`
-              : "A future home, a farm, or a place closer to nature. Tell us what you have in mind, and let?s explore the possibilities."}
-          </p>
-          <a className="button" href="tel:+919970567798">
-            Call Sunil Bhansari <Arrow />
-          </a>
-          <a className="underlined" href="mailto:bhansaris@gmail.com">
-            Email us directly <Arrow />
-          </a>
-          <div className="visit-note">
-            <span className="eyebrow">PLANNING A SITE VISIT?</span>
-            <p>
-              Call us to discuss suitable locations and arrange a time to walk
-              the land together.
-            </p>
-          </div>
+          <EnquiryForm key={service || "general"} service={service} />
         </Reveal>
       </section>
       <section className="container faq">

@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import nodemailer from "nodemailer";
 import { services } from "../src/data.js";
 
 const allowedServices = new Set([
@@ -56,14 +56,14 @@ export function createEmails(data, { from, inbox }) {
     {
       from,
       to: [inbox],
-      reply_to: data.email,
+      replyTo: data.email,
       subject: `Website enquiry — ${data.service}`,
       text,
     },
     {
       from,
       to: [data.email],
-      reply_to: inbox,
+      replyTo: inbox,
       subject: "Thank you for reaching out to Vihar Earth",
       text: thanks,
       html,
@@ -73,7 +73,7 @@ export function createEmails(data, { from, inbox }) {
 
 export function createContactHandler({
   env = process.env,
-  fetchImpl = fetch,
+  createTransport = nodemailer.createTransport,
   now = Date.now,
 } = {}) {
   const attempts = new Map();
@@ -110,21 +110,32 @@ export function createContactHandler({
       });
     if (!req.headers["content-type"]?.startsWith("application/json"))
       return send(415, { error: "Please submit the enquiry form." });
-    if (!allow(`ip:${req.socket.remoteAddress}`, 20))
+    if (
+      !allow(
+        `ip:${(env.VERCEL ? req.headers["x-forwarded-for"]?.split(",")[0]?.trim() : req.socket?.remoteAddress) || "unknown"}`,
+        20,
+      )
+    )
       return send(429, {
         error: "Too many attempts. Please try again in 15 minutes or call us.",
       });
     let input, data;
     try {
-      const chunks = [];
-      let length = 0;
-      for await (const chunk of req) {
-        length += chunk.length;
-        if (length > 16000)
+      if (req.body !== undefined) {
+        if (Buffer.byteLength(JSON.stringify(req.body)) > 16000)
           return send(413, { error: "Your message is too long." });
-        chunks.push(Buffer.from(chunk));
+        input = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+      } else {
+        const chunks = [];
+        let length = 0;
+        for await (const chunk of req) {
+          length += Buffer.byteLength(chunk);
+          if (length > 16000)
+            return send(413, { error: "Your message is too long." });
+          chunks.push(Buffer.from(chunk));
+        }
+        input = JSON.parse(Buffer.concat(chunks).toString("utf8"));
       }
-      input = JSON.parse(Buffer.concat(chunks).toString("utf8"));
       data = validateEnquiry(input);
     } catch {
       return send(400, {
@@ -132,14 +143,7 @@ export function createContactHandler({
           "Please check your contact details, message and consent, then try again.",
       });
     }
-    const id = input.submissionId;
-    if (typeof id !== "string" || !/^[a-f0-9-]{36}$/i.test(id))
-      return send(400, { error: "Please refresh the page and try again." });
-    if (
-      !env.RESEND_API_KEY ||
-      !env.RESEND_FROM_EMAIL ||
-      !emailPattern.test(env.RESEND_FROM_EMAIL)
-    )
+    if (!env.SMTP_USER || !env.SMTP_PASS || !emailPattern.test(env.SMTP_USER))
       return send(503, {
         error:
           "Online enquiries are not available yet. Please email bhansaris@gmail.com or call +91 99705 67798.",
@@ -150,31 +154,35 @@ export function createContactHandler({
       });
     const inbox = env.CONTACT_TO_EMAIL || "bhansaris@gmail.com";
     const emails = createEmails(data, {
-      from: `Vihar Earth <${env.RESEND_FROM_EMAIL}>`,
+      from: `Vihar Earth <${env.SMTP_USER}>`,
       inbox,
     });
-    const key = createHash("sha256")
-      .update(id + JSON.stringify(data))
-      .digest("hex");
+    let transport;
     try {
-      const response = await fetchImpl("https://api.resend.com/emails/batch", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${env.RESEND_API_KEY}`,
-          "Content-Type": "application/json",
-          "Idempotency-Key": `enquiry-${key}`,
-        },
-        body: JSON.stringify(emails),
-        signal: AbortSignal.timeout(15000),
+      transport = createTransport({
+        host: env.SMTP_HOST || "smtp.gmail.com",
+        port: Number(env.SMTP_PORT || 465),
+        secure: Number(env.SMTP_PORT || 465) === 465,
+        requireTLS: true,
+        auth: { user: env.SMTP_USER, pass: env.SMTP_PASS },
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 15000,
+        disableFileAccess: true,
+        disableUrlAccess: true,
       });
-      const result = await response.json();
-      if (
-        !response.ok ||
-        !Array.isArray(result.data) ||
-        result.data.length !== 2 ||
-        result.data.some((email) => !email.id)
-      )
-        throw new Error("Email provider did not accept both emails");
+      const owner = await transport.sendMail(emails[0]);
+      if (!owner.accepted?.length) throw new Error("Enquiry not accepted");
+      try {
+        const visitor = await transport.sendMail(emails[1]);
+        if (!visitor.accepted?.length)
+          throw new Error("Confirmation not accepted");
+      } catch {
+        return send(200, {
+          message:
+            "Thank you! Your enquiry has been submitted. We could not send your confirmation email, but our team will get in touch with you.",
+        });
+      }
       return send(200, {
         message:
           "Thank you for reaching out! Your enquiry has been submitted, and your confirmation email is on its way. Please check your inbox or spam folder.",
@@ -184,6 +192,8 @@ export function createContactHandler({
         error:
           "We could not confirm your submission. Please try again, or email bhansaris@gmail.com directly.",
       });
+    } finally {
+      transport?.close();
     }
   };
 }

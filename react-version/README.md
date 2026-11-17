@@ -12,7 +12,7 @@ npm install
 npm run dev
 ```
 
-Open the URL printed by Vite. This version is frontend-only. Contact visitors can call or open their email app; there is no form submission or automatic thank-you email.
+Open the printed local URL. The Node server runs Vite and the contact API together. See EMAIL-SETUP.md to configure Gmail SMTP.
 
 ## Deploy on Vercel
 
@@ -23,7 +23,7 @@ Import this GitHub repository and select:
 - Build command: `npm run build`
 - Output directory: `dist`
 
-No email API keys or environment variables are needed. Hash routes work on static hosting. For a local production preview, run `npm run build`, then `npm run preview`.
+Configure the server-only SMTP variables described in EMAIL-SETUP.md, then redeploy. Vercel runs api/contact.js alongside the static frontend. `npm run preview` previews only the frontend; use `npm run dev` for the email API locally.
 
 ## Included
 
@@ -33,13 +33,13 @@ No email API keys or environment variables are needed. Hash routes work on stati
 - Perspective cards and floating depth layers.
 - Mobile navigation, keyboard interaction, automatic reduced-motion support.
 - All eight services, filtering and service-prefilled enquiry form.
-- Direct call and email links; no backend required.
+- Nodemailer contact form, thank-you emails, and direct call/email links.
 
 Edit `src/data.js` for services, `src/main.jsx` for page content, `src/styles.css` for appearance, and `src/TerrainScene.jsx` for the 3D scene. Assets are local in `public/assets/`. Google Fonts loads Marcellus and DM Sans with system fallbacks.
 
 The original request's “barallel lands” remains interpreted as “Barren lands”. Land cards are illustrative categories, not verified listings. The supplied logo and demo contact details have been retained. Indian landscape photo credits are recorded in `public/assets/CREDITS.md`.
 
-The optional Resend server source and `EMAIL-SETUP.md` are retained for future use, but are not started by the app scripts or included in the static deployment. No live email credentials are configured.
+The Nodemailer backend is ready. No live email credentials are configured; follow `EMAIL-SETUP.md` to activate sending.
 
 ## Validation
 
